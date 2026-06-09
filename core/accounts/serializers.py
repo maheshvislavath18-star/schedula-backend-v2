@@ -1,19 +1,34 @@
 from rest_framework import serializers
-from .models import User
+from django.contrib.auth import get_user_model
+from .models import DoctorProfile
 
+User = get_user_model()
+
+
+# ---------------- SIGNUP ----------------
 class SignupSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
     class Meta:
         model = User
         fields = ['username', 'email', 'password', 'role']
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
 
     def create(self, validated_data):
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            password=validated_data['password'],
-            role=validated_data['role']
-        )
-        return user
+        return User.objects.create_user(**validated_data)
+
+
+# ---------------- DOCTOR SERIALIZER ----------------
+class DoctorSerializer(serializers.ModelSerializer):
+    doctor_id = serializers.IntegerField(source='id')
+    full_name = serializers.CharField(source='user.get_full_name')
+
+    class Meta:
+        model = DoctorProfile
+        fields = [
+            'doctor_id',
+            'full_name',
+            'specialization',
+            'experience',
+            'consultation_fee',
+            'is_available'
+        ]
