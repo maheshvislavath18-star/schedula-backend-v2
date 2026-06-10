@@ -10,13 +10,10 @@ import { PatientModule } from './patient/patient.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: 'BUNNY123',
-      database: 'schedula',
-
-      // IMPORTANT
+      url: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false,
+      },
       autoLoadEntities: true,
       synchronize: true,
     }),
