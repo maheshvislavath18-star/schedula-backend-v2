@@ -5,26 +5,30 @@ import { JwtService } from '@nestjs/jwt';
 export class AuthService {
   constructor(private jwtService: JwtService) {}
 
-  // TEMP signup (no DB yet)
+  // SIGNUP (TEMP - no DB yet)
   signup(data: any) {
+    const { email, password } = data;
+
     return {
       message: 'User registered successfully',
-      data,
+      data: {
+        email,
+      },
     };
   }
 
-  // LOGIN (FIXED)
+  // LOGIN
   login(data: any) {
-    // ⚠️ In real project you will verify DB user here
-    if (!data.username || !data.password) {
+    const { username, password } = data;
+
+    if (!username || !password) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Fake user (until DB auth is added)
     const user = {
       id: 1,
-      username: data.username,
-      role: 'DOCTOR', // later replace with DB role
+      username,
+      role: 'DOCTOR',
     };
 
     const payload = {
@@ -34,7 +38,12 @@ export class AuthService {
     };
 
     return {
+      message: 'Login successful',
+
+      // ✅ IMPORTANT FIX (safer JWT handling)
       access_token: this.jwtService.sign(payload),
+
+      user,
     };
   }
 }
