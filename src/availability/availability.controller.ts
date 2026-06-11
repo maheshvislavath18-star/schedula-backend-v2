@@ -1,0 +1,44 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+} from '@nestjs/common';
+
+import { AvailabilityService } from './availability.service';
+import { CreateAvailabilityDto } from './dto/create-availability.dto';
+import { CreateOverrideDto } from './dto/create-override.dto';
+
+@Controller('doctor/availability')
+export class AvailabilityController {
+  constructor(
+    private readonly availabilityService: AvailabilityService,
+  ) {}
+
+  @Get()
+  getAll() {
+    return this.availabilityService.getAllRecurring();
+  }
+
+  @Post()
+  create(
+    @Body() dto: CreateAvailabilityDto,
+  ) {
+    return this.availabilityService.createAvailability(dto);
+  }
+
+  @Post('override')
+  createOverride(
+    @Body() dto: CreateOverrideDto,
+  ) {
+    return this.availabilityService.createOverride(dto);
+  }
+
+  @Get('date')
+  getByDate(
+    @Query('date') date: string,
+  ) {
+    return this.availabilityService.getAvailabilityByDate(date);
+  }
+}
