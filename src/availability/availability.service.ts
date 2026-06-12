@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   ConflictException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -93,15 +94,108 @@ export class AvailabilityService {
     return this.customRepo.save(availability);
   }
 
-  async getAvailabilityByDate(date: string) {
-    const custom = await this.customRepo.find({
-      where: { date },
+async getAvailabilityByDate(date: string) {
+  const custom = await this.customRepo.find({
+    where: { date },
+  });
+
+  if (custom.length > 0) {
+    return custom;
+  }
+
+  return [];
+}
+
+async getDoctorSlots(
+  doctorId: number,
+  date: string,
+  duration = 15,
+) {
+  if (!date) {
+    throw new BadRequestException('Date is required');
+  }
+
+  const selectedDate = new Date(date);
+
+  if (isNaN(selectedDate.getTime())) {
+    throw new BadRequestException('Invalid date');
+  }
+
+  let startTime: string;
+  let endTime: string;
+
+  const custom = await this.customRepo.findOne({
+    where: {
+      doctorId,
+      date,
+    },
+  });
+
+  if (custom) {
+    startTime = custom.startTime;
+    endTime = custom.endTime;
+  } else {
+    const dayOfWeek = selectedDate.toLocaleDateString(
+      'en-US',
+      {
+        weekday: 'long',
+      },
+    );
+
+    const recurring = await this.recurringRepo.findOne({
+      where: {
+        doctorId,
+        dayOfWeek,
+      },
     });
 
-    if (custom.length > 0) {
-      return custom;
+    if (!recurring) {
+      throw new NotFoundException(
+        'No availability found',
+      );
     }
 
-    return [];
+    startTime = recurring.startTime;
+    endTime = recurring.endTime;
   }
+
+  const slots: any[] = [];
+
+  const [startHour, startMinute] = startTime
+    .split(':')
+    .map(Number);
+
+  const [endHour, endMinute] = endTime
+    .split(':')
+    .map(Number);
+
+  let current = new Date(selectedDate);
+  current.setHours(startHour, startMinute, 0, 0);
+
+  const end = new Date(selectedDate);
+  end.setHours(endHour, endMinute, 0, 0);
+
+  while (
+    current.getTime() + duration * 60000 <=
+    end.getTime()
+  ) {
+    const slotStart = new Date(current);
+    const slotEnd = new Date(
+      current.getTime() + duration * 60000,
+    );
+
+    slots.push({
+      start: slotStart.toTimeString().slice(0, 5),
+      end: slotEnd.toTimeString().slice(0, 5),
+    });
+
+    current = slotEnd;
+  }
+
+  return {
+    doctorId,
+    date,
+    slots,
+  };
+}
 }

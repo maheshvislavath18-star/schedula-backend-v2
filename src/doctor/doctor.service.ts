@@ -19,7 +19,7 @@ export class DoctorService {
 
     const profile = this.doctorRepository.create({
       ...dto,
-      user: { id: user.id }, // ✅ FIXED (important for TypeORM relation)
+      user: { id: user.id },
     });
 
     const saved = await this.doctorRepository.save(profile);
@@ -71,6 +71,23 @@ export class DoctorService {
     return {
       message: 'Doctor profile updated successfully',
       data: updated,
+    };
+  }
+
+  // DAY 7 - GET AVAILABLE SLOTS
+  async getSlots(doctorId: number, date: string) {
+    const doctor = await this.doctorRepository.findOne({
+      where: { id: doctorId },
+    });
+
+    if (!doctor) {
+      throw new NotFoundException('Doctor not found');
+    }
+
+    return {
+      message: 'Slots API working',
+      doctorId,
+      date,
     };
   }
 }
