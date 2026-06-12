@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Query,
+  Param,
 } from '@nestjs/common';
 
 import { AvailabilityService } from './availability.service';
@@ -40,5 +41,19 @@ export class AvailabilityController {
     @Query('date') date: string,
   ) {
     return this.availabilityService.getAvailabilityByDate(date);
+  }
+
+  // DAY 7 - SLOT GENERATION
+  @Get(':doctorId/slots')
+  getDoctorSlots(
+    @Param('doctorId') doctorId: string,
+    @Query('date') date: string,
+    @Query('duration') duration?: string,
+  ) {
+    return this.availabilityService.getDoctorSlots(
+      Number(doctorId),
+      date,
+      duration ? Number(duration) : 15,
+    );
   }
 }

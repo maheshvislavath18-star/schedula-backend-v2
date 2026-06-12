@@ -5,6 +5,7 @@ import {
   Patch,
   Body,
   Param,
+  Query,
   UseGuards,
   Req,
   ForbiddenException,
@@ -12,6 +13,7 @@ import {
 
 import { DoctorService } from './doctor.service';
 import { CreateDoctorProfileDto } from './dto/create-doctor-profile.dto';
+import { GetSlotsDto } from './dto/get-slots.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('doctor')
@@ -48,7 +50,6 @@ export class DoctorController {
       throw new ForbiddenException('Only doctors can view profile');
     }
 
-    // ✅ FIXED HERE
     return this.doctorService.getProfile(req.user.id);
   }
 
@@ -69,5 +70,18 @@ export class DoctorController {
     }
 
     return this.doctorService.updateProfile(Number(id), dto);
+  }
+
+  // DAY 7 - GET AVAILABLE SLOTS
+  @UseGuards(JwtAuthGuard)
+  @Get(':doctorId/slots')
+  getSlots(
+    @Param('doctorId') doctorId: string,
+    @Query() query: GetSlotsDto,
+  ) {
+    return this.doctorService.getSlots(
+      Number(doctorId),
+      query.date,
+    );
   }
 }
