@@ -42,10 +42,24 @@ export class AppointmentController {
   }
 
   // =====================================================
+  // 🚀 DAY 10 API - RESCHEDULE APPOINTMENT
+  // =====================================================
+
+  @Patch(':id/reschedule')
+  rescheduleAppointment(
+    @Param('id') id: string,
+    @Body() body: any,
+  ) {
+    return this.appointmentService.rescheduleAppointment(
+      Number(id),
+      body,
+    );
+  }
+
+  // =====================================================
   // 🚀 DAY 9 APIs
   // =====================================================
 
-  // 🔵 STREAM CREATE
   @Post('stream/:doctorId')
   createStream(
     @Param('doctorId') doctorId: string,
@@ -57,7 +71,6 @@ export class AppointmentController {
     );
   }
 
-  // 🟡 WAVE CREATE
   @Post('wave/:doctorId')
   createWave(
     @Param('doctorId') doctorId: string,
@@ -69,29 +82,26 @@ export class AppointmentController {
     );
   }
 
-  // 🟠 WAVE BOOK (SAFE FIX FOR POSTGRES ERROR)
   @Post('wave/book')
-bookWave(@Body() body: any) {
-  const waveId = Number(body.waveId);
-  const patientId = Number(body.patientId);
+  bookWave(@Body() body: any) {
+    const waveId = Number(body.waveId);
+    const patientId = Number(body.patientId);
 
-  if (isNaN(waveId) || isNaN(patientId)) {
-    return { message: 'Invalid waveId or patientId' };
+    if (isNaN(waveId) || isNaN(patientId)) {
+      return { message: 'Invalid waveId or patientId' };
+    }
+
+    return this.appointmentService.bookWave({
+      waveId,
+      patientId,
+    });
   }
 
-  return this.appointmentService.bookWave({
-    waveId,
-    patientId,
-  });
-}
-
-  // 🟣 STREAM VIEW
   @Get('stream/:doctorId')
   getStreamSlots(@Param('doctorId') doctorId: string) {
     return this.appointmentService.getStreamSlots(Number(doctorId));
   }
 
-  // 🟣 WAVE VIEW
   @Get('wave/:doctorId')
   getWaveInfo(@Param('doctorId') doctorId: string) {
     return this.appointmentService.getWaveInfo(Number(doctorId));

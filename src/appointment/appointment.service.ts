@@ -191,18 +191,111 @@ async bookWave(body: any) {
 }
 
   async getWaveInfo(doctorId: number) {
-    const wave = await this.waveRepository.findOne({
-      where: { doctorId },
-    });
+  const wave = await this.waveRepository.findOne({
+    where: { doctorId },
+  });
 
-    if (!wave) return { message: 'No wave found' };
+  if (!wave) return { message: 'No wave found' };
 
+  return {
+    message: 'Wave info fetched',
+    timeWindow: `${wave.startTime} - ${wave.endTime}`,
+    maxCapacity: wave.maxCapacity,
+    bookedCount: wave.bookedCount,
+    available: wave.maxCapacity - wave.bookedCount,
+  };
+}
+
+// =====================================================
+// 🚀 DAY 10 RESCHEDULE
+// =====================================================
+
+async rescheduleAppointment(
+  appointmentId: number,
+  body: any,
+) {
+  const appointment = await this.appointmentRepository.findOne({
+    where: { id: appointmentId },
+  });
+
+  if (!appointment) {
     return {
-      message: 'Wave info fetched',
-      timeWindow: `${wave.startTime} - ${wave.endTime}`,
-      maxCapacity: wave.maxCapacity,
-      bookedCount: wave.bookedCount,
-      available: wave.maxCapacity - wave.bookedCount,
+      message: 'Appointment not found',
     };
   }
+
+  if (!body.newTime) {
+    return {
+      message: 'newTime is required',
+    };
+  }
+
+  if (
+    body.patientId &&
+    appointment.patientId !== Number(body.patientId)
+  ) {
+    return {
+      message:
+        'Unauthorized: Only appointment owner can reschedule',
+    };
+  }
+
+  if (appointment.status === 'CANCELLED') {
+    return {
+      message: 'Cannot reschedule cancelled appointment',
+    };
+  }
+
+  const appointmentDateTime = new Date(
+    `${appointment.date}T${appointment.startTime}`,
+  );
+
+  const now = new Date();
+
+  const diffMinutes =
+    (appointmentDateTime.getTime() - now.getTime()) /
+    (1000 * 60);
+
+  if (diffMinutes < 30) {
+    return {
+      message:
+        'Reschedule not allowed within 30 minutes of appointment',
+    };
+  }
+
+  if (body.newTime === appointment.startTime) {
+    const suggestedDate = new Date();
+    suggestedDate.setHours(
+      suggestedDate.getHours() + 1,
+    );
+
+    return {
+      message: 'Cannot reschedule to the same time',
+      suggestedTime: suggestedDate,
+    };
+  }
+
+  const requestedTime = new Date(body.newTime);
+
+  if (requestedTime <= new Date()) {
+    const suggestedDate = new Date();
+    suggestedDate.setDate(
+      suggestedDate.getDate() + 1,
+    );
+
+    return {
+      message: 'Cannot reschedule to a past time',
+      suggestedTime: suggestedDate,
+    };
+  }
+
+  appointment.startTime = body.newTime;
+
+  await this.appointmentRepository.save(appointment);
+
+  return {
+    message: 'Appointment rescheduled successfully',
+    data: appointment,
+  };
+}
 }
