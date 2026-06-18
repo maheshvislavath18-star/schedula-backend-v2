@@ -1,22 +1,3 @@
-# Schedula Backend V2
-
-Backend Internship Project developed using NestJS, TypeScript, PostgreSQL and JWT Authentication.
-
-## Project Setup
-
-```bash
-npm install
-npm run start:dev
-```
-
-## Environment Variables
-
-```env
-DATABASE_URL=your_neon_database_url
-JWT_SECRET=your_jwt_secret
-PORT=3000
-```
-
 ## Features Implemented
 
 ### Day 2
@@ -30,58 +11,37 @@ PORT=3000
 * Doctor Onboarding
 * Patient Onboarding
 
+### Day 4
+
+* Appointment Creation APIs
+* Appointment Retrieval APIs
+
+### Day 5
+
+* Availability Management
+* Slot Management
+
+### Day 6
+
+* Conflict Detection
+* Appointment Validation
+
+### Day 7
+
+* Role-Based Access Control
+* Protected Routes
+
 ### Day 8
 
-* Appointment Booking & Management APIs
+* Appointment Booking APIs
+* Appointment Management APIs
 
 ### Day 9
 
 * Advanced Scheduling System
+* Scheduling Optimization
 
 ### Day 10
 
 * Appointment Rescheduling APIs
-
-## API Documentation
-
-### Authentication
-
-POST /auth/register
-
-POST /auth/login
-
-### Doctors
-
-POST /doctors
-
-GET /doctors
-
-### Patients
-
-POST /patients
-
-GET /patients
-
-### Appointments
-
-POST /appointments
-
-GET /appointments
-
-PUT /appointments/:id
-
-DELETE /appointments/:id
-
-### Scheduling
-
-GET /availability
-
-POST /reschedule
-
-## Repository
-
-https://github.com/maheshvislavath18-star/schedula-backend-v2
-
-## Pull Request
-
-https://github.com/maheshvislavath18-star/schedula-backend-v2/pull/6
+* Rescheduling Validation
