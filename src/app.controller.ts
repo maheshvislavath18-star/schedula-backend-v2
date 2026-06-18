@@ -1,12 +1,13 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  home() {
+    return {
+      status: 'success',
+      project: 'Schedula Backend V2',
+      message: 'Schedula Backend API Running Successfully',
+    };
   }
 }
