@@ -12,26 +12,46 @@ export class DoctorService {
     private doctorRepository: Repository<DoctorProfile>,
   ) {}
 
+  // CREATE PROFILE
   async createProfile(dto: CreateDoctorProfileDto, user: any) {
-    console.log('========== CREATE PROFILE ==========');
     console.log('USER:', user);
     console.log('DTO:', dto);
 
+    const profile = this.doctorRepository.create({
+      ...dto,
+      user: { id: user.id },
+    });
+
+    const saved = await this.doctorRepository.save(profile);
+
     return {
-      message: 'Debug working',
-      user,
-      dto,
+      message: 'Doctor profile created successfully',
+      data: saved,
     };
   }
 
-  async getProfile() {
-    return await this.doctorRepository.find({
+  // GET PROFILE
+  async getProfile(userId: number) {
+    const profile = await this.doctorRepository.findOne({
+      where: {
+        user: { id: userId },
+      },
       relations: {
         user: true,
       },
     });
+
+    if (!profile) {
+      throw new NotFoundException('Doctor profile not found');
+    }
+
+    return {
+      message: 'Doctor profile fetched successfully',
+      data: profile,
+    };
   }
 
+  // UPDATE PROFILE
   async updateProfile(id: number, dto: Partial<CreateDoctorProfileDto>) {
     const profile = await this.doctorRepository.findOne({
       where: { id },
@@ -46,6 +66,28 @@ export class DoctorService {
 
     Object.assign(profile, dto);
 
-    return await this.doctorRepository.save(profile);
+    const updated = await this.doctorRepository.save(profile);
+
+    return {
+      message: 'Doctor profile updated successfully',
+      data: updated,
+    };
+  }
+
+  // DAY 7 - GET AVAILABLE SLOTS
+  async getSlots(doctorId: number, date: string) {
+    const doctor = await this.doctorRepository.findOne({
+      where: { id: doctorId },
+    });
+
+    if (!doctor) {
+      throw new NotFoundException('Doctor not found');
+    }
+
+    return {
+      message: 'Slots API working',
+      doctorId,
+      date,
+    };
   }
 }
