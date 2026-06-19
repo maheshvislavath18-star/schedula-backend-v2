@@ -75,7 +75,7 @@ export class DoctorService {
   }
 
   // DAY 7 - GET AVAILABLE SLOTS
-  async getSlots(doctorId: number, date: string) {
+    async getSlots(doctorId: number, date: string) {
     const doctor = await this.doctorRepository.findOne({
       where: { id: doctorId },
     });
@@ -88,6 +88,28 @@ export class DoctorService {
       message: 'Slots API working',
       doctorId,
       date,
+    };
+  }
+
+  async getAppointments(doctorId: number, date?: string) {
+    return {
+      success: true,
+      message: 'Appointments fetched successfully',
+      doctorId,
+      date: date || null,
+      data: [],
+    };
+  }
+
+  async cancelAppointment(
+    appointmentId: number,
+    doctorId: number,
+  ) {
+    return {
+      success: true,
+      message: 'Appointment cancelled successfully',
+      appointmentId,
+      doctorId,
     };
   }
 }

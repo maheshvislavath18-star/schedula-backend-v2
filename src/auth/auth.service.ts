@@ -1,48 +1,45 @@
+
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
-  constructor(private jwtService: JwtService) {}
+  constructor(private readonly jwtService: JwtService) {}
 
-  // SIGNUP (TEMP - no DB yet)
   signup(data: any) {
-    const { email, password } = data;
+    const { email, password, role } = data;
 
     return {
       message: 'User registered successfully',
       data: {
         email,
+        role: role || 'DOCTOR',
       },
     };
   }
 
-  // LOGIN
   login(data: any) {
-    const { username, password } = data;
+    const { email, password } = data;
 
-    if (!username || !password) {
+    if (!email || !password) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const user = {
       id: 1,
-      username,
+      email,
       role: 'DOCTOR',
     };
 
     const payload = {
       sub: user.id,
-      username: user.username,
+      email: user.email,
       role: user.role,
     };
 
     return {
       message: 'Login successful',
-
-      // ✅ IMPORTANT FIX (safer JWT handling)
       access_token: this.jwtService.sign(payload),
-
       user,
     };
   }
