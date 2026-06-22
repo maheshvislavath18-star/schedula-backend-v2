@@ -17,10 +17,6 @@ export class AppointmentController {
     private readonly appointmentService: AppointmentService,
   ) {}
 
-  // =====================================================
-  // 🟢 DAY 8 APIs
-  // =====================================================
-
   @Post()
   create(@Body() dto: CreateAppointmentDto) {
     return this.appointmentService.bookAppointment(dto);
@@ -28,22 +24,24 @@ export class AppointmentController {
 
   @Get('my')
   getMyAppointments(@Query('patientId') patientId: string) {
-    return this.appointmentService.getMyAppointments(Number(patientId));
+    return this.appointmentService.getMyAppointments(
+      Number(patientId),
+    );
   }
 
   @Get('doctor')
   getDoctorAppointments(@Query('doctorId') doctorId: string) {
-    return this.appointmentService.getDoctorAppointments(Number(doctorId));
+    return this.appointmentService.getDoctorAppointments(
+      Number(doctorId),
+    );
   }
 
   @Patch(':id/cancel')
   cancelAppointment(@Param('id') id: string) {
-    return this.appointmentService.cancelAppointment(Number(id));
+    return this.appointmentService.cancelAppointment(
+      Number(id),
+    );
   }
-
-  // =====================================================
-  // 🚀 DAY 10 API - RESCHEDULE APPOINTMENT
-  // =====================================================
 
   @Patch(':id/reschedule')
   rescheduleAppointment(
@@ -55,10 +53,6 @@ export class AppointmentController {
       body,
     );
   }
-
-  // =====================================================
-  // 🚀 DAY 9 APIs
-  // =====================================================
 
   @Post('stream/:doctorId')
   createStream(
@@ -88,7 +82,9 @@ export class AppointmentController {
     const patientId = Number(body.patientId);
 
     if (isNaN(waveId) || isNaN(patientId)) {
-      return { message: 'Invalid waveId or patientId' };
+      return {
+        message: 'Invalid waveId or patientId',
+      };
     }
 
     return this.appointmentService.bookWave({
@@ -98,12 +94,29 @@ export class AppointmentController {
   }
 
   @Get('stream/:doctorId')
-  getStreamSlots(@Param('doctorId') doctorId: string) {
-    return this.appointmentService.getStreamSlots(Number(doctorId));
+  getStreamSlots(
+    @Param('doctorId') doctorId: string,
+  ) {
+    return this.appointmentService.getStreamSlots(
+      Number(doctorId),
+    );
   }
 
   @Get('wave/:doctorId')
-  getWaveInfo(@Param('doctorId') doctorId: string) {
-    return this.appointmentService.getWaveInfo(Number(doctorId));
+  getWaveInfo(
+    @Param('doctorId') doctorId: string,
+  ) {
+    return this.appointmentService.getWaveInfo(
+      Number(doctorId),
+    );
+  }
+
+  @Get('doctor/:doctorId/next-available')
+  findNextAvailable(
+    @Param('doctorId') doctorId: string,
+  ) {
+    return this.appointmentService.findNextAvailableAppointment(
+      Number(doctorId),
+    );
   }
 }

@@ -298,4 +298,130 @@ async rescheduleAppointment(
     data: appointment,
   };
 }
+// =====================================================
+// 🚀 DAY 13 - NEXT AVAILABLE APPOINTMENT
+// =====================================================
+
+async findNextAvailableAppointment(
+  doctorId: number,
+) {
+  if (!doctorId || isNaN(doctorId)) {
+    return {
+      message: 'Invalid doctor ID',
+    };
+  }
+
+  const streamSlots = await this.streamRepository.find({
+    where: { doctorId },
+  });
+
+  const wave = await this.waveRepository.findOne({
+    where: { doctorId },
+  });
+
+  if (streamSlots.length === 0 && !wave) {
+    return {
+      message: 'Doctor unavailable',
+    };
+  }
+
+  const today = new Date();
+  const todayDate = today.toISOString().split('T')[0];
+
+  const todayBooked =
+    await this.appointmentRepository.count({
+      where: {
+        doctorId,
+        date: todayDate,
+        status: 'BOOKED',
+      },
+    });
+
+  // STREAM CHECK
+  if (
+    streamSlots.length > 0 &&
+    todayBooked < streamSlots.length
+  ) {
+    return {
+      message: 'Slots available today',
+      appointmentDate: todayDate,
+      schedulingType: 'STREAM',
+      availableSlots:
+        streamSlots.length - todayBooked,
+    };
+  }
+
+  // WAVE CHECK
+  if (
+    wave &&
+    wave.bookedCount < wave.maxCapacity
+  ) {
+    return {
+      message: 'Wave available today',
+      appointmentDate: todayDate,
+      schedulingType: 'WAVE',
+      availableSlots:
+        wave.maxCapacity - wave.bookedCount,
+    };
+  }
+
+  // Search next 30 days
+  for (let i = 1; i <= 30; i++) {
+    const nextDate = new Date();
+    nextDate.setDate(
+      nextDate.getDate() + i,
+    );
+
+    const formattedDate =
+      nextDate.toISOString().split('T')[0];
+
+    const booked =
+      await this.appointmentRepository.count({
+        where: {
+          doctorId,
+          date: formattedDate,
+          status: 'BOOKED',
+        },
+      });
+
+    if (
+      streamSlots.length > 0 &&
+      booked < streamSlots.length
+    ) {
+      return {
+        message:
+          'Next available appointment found',
+        appointmentDate:
+          formattedDate,
+        schedulingType:
+          'STREAM',
+        availableSlots:
+          streamSlots.length - booked,
+      };
+    }
+
+    if (
+      wave &&
+      wave.bookedCount <
+        wave.maxCapacity
+    ) {
+      return {
+        message:
+          'Next available appointment found',
+        appointmentDate:
+          formattedDate,
+        schedulingType:
+          'WAVE',
+        availableSlots:
+          wave.maxCapacity -
+          wave.bookedCount,
+      };
+    }
+  }
+
+  return {
+    message:
+      'No appointments available in the next 30 working days. Please try again later.',
+  };
+}
 }
