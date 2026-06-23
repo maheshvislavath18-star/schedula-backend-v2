@@ -8,6 +8,7 @@ import { DoctorModule } from './doctor/doctor.module';
 import { PatientModule } from './patient/patient.module';
 import { AvailabilityModule } from './availability/availability.module';
 import { AppointmentModule } from './appointment/appointment.module';
+import { NotificationModule } from './notifications/notification.module';
 
 @Module({
   imports: [
@@ -18,7 +19,6 @@ import { AppointmentModule } from './appointment/appointment.module';
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
-
       ssl:
         process.env.NODE_ENV === 'production'
           ? { rejectUnauthorized: false }
@@ -26,7 +26,6 @@ import { AppointmentModule } from './appointment/appointment.module';
 
       autoLoadEntities: true,
       synchronize: true,
-
       logging: true,
     }),
 
@@ -36,6 +35,7 @@ import { AppointmentModule } from './appointment/appointment.module';
     PatientModule,
     AvailabilityModule,
     AppointmentModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}
