@@ -9,6 +9,8 @@ import { StreamSlot } from './entity/stream-slot.entity';
 import { Wave } from './entity/wave.entity';
 import { WaveBooking } from './entity/wave-booking.entity';
 
+import { NotificationModule } from '../notifications/notification.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -17,6 +19,7 @@ import { WaveBooking } from './entity/wave-booking.entity';
       Wave,
       WaveBooking,
     ]),
+    NotificationModule, // 👈 ADD THIS
   ],
   controllers: [AppointmentController],
   providers: [AppointmentService],

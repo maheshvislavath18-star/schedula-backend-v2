@@ -7,22 +7,25 @@ import { StreamSlot } from './entity/stream-slot.entity';
 import { Wave } from './entity/wave.entity';
 import { WaveBooking } from './entity/wave-booking.entity';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
-
+import { NotificationService } from '../notifications/notification.service';
+import { NotificationType } from '../notifications/notification-type.enum';
 @Injectable()
 export class AppointmentService {
   constructor(
-    @InjectRepository(Appointment)
-    private appointmentRepository: Repository<Appointment>,
+  @InjectRepository(Appointment)
+  private appointmentRepository: Repository<Appointment>,
 
-    @InjectRepository(StreamSlot)
-    private streamRepository: Repository<StreamSlot>,
+  @InjectRepository(StreamSlot)
+  private streamRepository: Repository<StreamSlot>,
 
-    @InjectRepository(Wave)
-    private waveRepository: Repository<Wave>,
+  @InjectRepository(Wave)
+  private waveRepository: Repository<Wave>,
 
-    @InjectRepository(WaveBooking)
-    private waveBookingRepository: Repository<WaveBooking>,
-  ) {}
+  @InjectRepository(WaveBooking)
+  private waveBookingRepository: Repository<WaveBooking>,
+
+  private readonly notificationService: NotificationService,
+) {}
 
   // =====================================================
   // 🟢 DAY 8
@@ -41,12 +44,19 @@ export class AppointmentService {
     if (existing) return { message: 'Slot already booked' };
 
     const appointment = this.appointmentRepository.create(dto);
-    const saved = await this.appointmentRepository.save(appointment);
+const saved = await this.appointmentRepository.save(appointment);
 
-    return {
-      message: 'Appointment booked successfully',
-      data: saved,
-    };
+await this.notificationService.createNotification({
+  patientId: saved.patientId,
+  title: 'Appointment Booked',
+  message: `Your appointment has been booked successfully for ${saved.date} at ${saved.startTime}`,
+  type: NotificationType.APPOINTMENT_BOOKED,
+});
+
+return {
+  message: 'Appointment booked successfully',
+  data: saved,
+};
   }
 
   async getMyAppointments(patientId: number) {
@@ -64,14 +74,30 @@ export class AppointmentService {
   }
 
   async cancelAppointment(id: number) {
-    const appt = await this.appointmentRepository.findOne({ where: { id } });
+  const appt = await this.appointmentRepository.findOne({
+    where: { id },
+  });
 
-    if (!appt) return { message: 'Not found' };
-
-    appt.status = 'CANCELLED';
-    return this.appointmentRepository.save(appt);
+  if (!appt) {
+    return { message: 'Not found' };
   }
 
+  appt.status = 'CANCELLED';
+
+  const updated = await this.appointmentRepository.save(appt);
+
+  await this.notificationService.createNotification({
+    patientId: updated.patientId,
+    title: 'Appointment Cancelled',
+    message: `Your appointment scheduled on ${updated.date} at ${updated.startTime} has been cancelled.`,
+    type: NotificationType.APPOINTMENT_CANCELLED,
+  });
+
+  return {
+    message: 'Appointment cancelled successfully',
+    data: updated,
+  };
+}
   // =====================================================
   // 🚀 STREAM (REAL DB)
   // =====================================================
@@ -149,10 +175,10 @@ export class AppointmentService {
 
     const saved = await this.waveRepository.save(wave);
 
-    return {
-      message: 'Wave schedule created',
-      data: saved,
-    };
+return {
+  message: 'Wave schedule created',
+  data: saved,
+};
   }
 
 async bookWave(body: any) {
@@ -291,12 +317,20 @@ async rescheduleAppointment(
 
   appointment.startTime = body.newTime;
 
+const updatedAppointment =
   await this.appointmentRepository.save(appointment);
 
-  return {
-    message: 'Appointment rescheduled successfully',
-    data: appointment,
-  };
+await this.notificationService.createNotification({
+  patientId: updatedAppointment.patientId,
+  title: 'Appointment Rescheduled',
+  message: `Your appointment has been rescheduled to ${updatedAppointment.date} at ${updatedAppointment.startTime}`,
+  type: NotificationType.APPOINTMENT_RESCHEDULED,
+});
+
+return {
+  message: 'Appointment rescheduled successfully',
+  data: updatedAppointment,
+};
 }
 // =====================================================
 // 🚀 DAY 13 - NEXT AVAILABLE APPOINTMENT
@@ -423,5 +457,5 @@ async findNextAvailableAppointment(
     message:
       'No appointments available in the next 30 working days. Please try again later.',
   };
-}
+};
 }

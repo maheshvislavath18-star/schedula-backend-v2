@@ -10,6 +10,23 @@ export class NotificationService {
     private readonly notificationRepository: Repository<Notification>,
   ) {}
 
+  async createNotification(data: {
+    patientId: number;
+    title: string;
+    message: string;
+    type: any;
+  }) {
+    const notification =
+      this.notificationRepository.create({
+        patientId: data.patientId,
+        title: data.title,
+        message: data.message,
+        type: data.type,
+      });
+
+    return this.notificationRepository.save(notification);
+  }
+
   async findAll() {
     return this.notificationRepository.find({
       order: {
