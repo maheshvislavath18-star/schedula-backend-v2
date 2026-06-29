@@ -46,7 +46,7 @@ export class AppointmentService {
     const appointment = this.appointmentRepository.create(dto);
 const saved = await this.appointmentRepository.save(appointment);
 
-await this.notificationService.createNotification({
+await this.notificationService.create({
   patientId: saved.patientId,
   title: 'Appointment Booked',
   message: `Your appointment has been booked successfully for ${saved.date} at ${saved.startTime}`,
@@ -86,7 +86,7 @@ return {
 
   const updated = await this.appointmentRepository.save(appt);
 
-  await this.notificationService.createNotification({
+  await this.notificationService.create({
     patientId: updated.patientId,
     title: 'Appointment Cancelled',
     message: `Your appointment scheduled on ${updated.date} at ${updated.startTime} has been cancelled.`,
@@ -320,11 +320,16 @@ async rescheduleAppointment(
 const updatedAppointment =
   await this.appointmentRepository.save(appointment);
 
-await this.notificationService.createNotification({
-  patientId: updatedAppointment.patientId,
-  title: 'Appointment Rescheduled',
-  message: `Your appointment has been rescheduled to ${updatedAppointment.date} at ${updatedAppointment.startTime}`,
-  type: NotificationType.APPOINTMENT_RESCHEDULED,
+await this.notificationService.create({
+
+patientId: updatedAppointment.patientId,
+
+title: 'Appointment Rescheduled',
+
+message: `Your appointment has been rescheduled to ${updatedAppointment.date} at ${updatedAppointment.startTime}`,
+
+type: NotificationType.APPOINTMENT_RESCHEDULED,
+
 });
 
 return {
