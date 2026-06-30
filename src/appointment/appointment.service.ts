@@ -31,7 +31,47 @@ export class AppointmentService {
   // 🟢 DAY 8
   // =====================================================
 
-  async bookAppointment(dto: CreateAppointmentDto) {
+async bookAppointment(dto: CreateAppointmentDto) {
+  const appointmentDate = new Date(dto.date);
+
+  if (isNaN(appointmentDate.getTime())) {
+    return { message: 'Invalid date format' };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  appointmentDate.setHours(0, 0, 0, 0);
+
+  if (appointmentDate.getTime() !== today.getTime()) {
+    return { message: "Booking allowed only for today's date" };
+  }
+
+ await this.appointmentRepository.findOne({
+    where: {
+      doctorId: dto.doctorId,
+      date: dto.date,
+      startTime: dto.startTime,
+      status: 'BOOKED',
+    },
+  });
+
+   return { message: 'Slot already booked' };
+
+  const appointment = this.appointmentRepository.create(dto);
+  const saved = await this.appointmentRepository.save(appointment);
+
+  await this.notificationService.create({
+    patientId: saved.patientId,
+    title: 'Appointment Booked',
+    message: `Your appointment has been booked successfully for ${saved.date} at ${saved.startTime}`,
+    type: NotificationType.APPOINTMENT_BOOKED,
+  });
+
+  return {
+    message: 'Appointment booked successfully',
+    data: saved,
+  };
+
     const existing = await this.appointmentRepository.findOne({
       where: {
         doctorId: dto.doctorId,
@@ -43,8 +83,8 @@ export class AppointmentService {
 
     if (existing) return { message: 'Slot already booked' };
 
-    const appointment = this.appointmentRepository.create(dto);
-const saved = await this.appointmentRepository.save(appointment);
+this.appointmentRepository.create(dto);
+await this.appointmentRepository.save(appointment);
 
 await this.notificationService.create({
   patientId: saved.patientId,
@@ -57,7 +97,7 @@ return {
   message: 'Appointment booked successfully',
   data: saved,
 };
-  }
+}
 
   async getMyAppointments(patientId: number) {
     return {
@@ -203,9 +243,9 @@ async bookWave(body: any) {
   await this.waveRepository.save(wave);
 
   const booking = this.waveBookingRepository.create({
-    waveId: Number(waveId),
-    patientId: Number(patientId),
-    tokenNumber: Number(wave.bookedCount),
+    waveId,
+    patientId,
+    tokenNumber: wave.bookedCount,
   });
 
   await this.waveBookingRepository.save(booking);
@@ -341,9 +381,7 @@ return {
 // 🚀 DAY 13 - NEXT AVAILABLE APPOINTMENT
 // =====================================================
 
-async findNextAvailableAppointment(
-  doctorId: number,
-) {
+async findNextAvailableAppointment(doctorId: number) {
   if (!doctorId || isNaN(doctorId)) {
     return {
       message: 'Invalid doctor ID',
@@ -355,8 +393,8 @@ async findNextAvailableAppointment(
   });
 
   const wave = await this.waveRepository.findOne({
-    where: { doctorId },
-  });
+  where: { doctorId },
+});
 
   if (streamSlots.length === 0 && !wave) {
     return {
@@ -378,17 +416,16 @@ async findNextAvailableAppointment(
 
   // STREAM CHECK
   if (
-    streamSlots.length > 0 &&
-    todayBooked < streamSlots.length
-  ) {
-    return {
-      message: 'Slots available today',
-      appointmentDate: todayDate,
-      schedulingType: 'STREAM',
-      availableSlots:
-        streamSlots.length - todayBooked,
-    };
-  }
+  streamSlots.length > 0 &&
+  todayBooked < streamSlots.length
+) {
+  return {
+    message: 'Slots available today',
+    appointmentDate: todayDate,
+    schedulingType: 'STREAM',
+    availableSlots: streamSlots.length - todayBooked,
+  };
+} // ✅ THIS CLOSING BRACKET IS MUST
 
   // WAVE CHECK
   if (
@@ -424,21 +461,16 @@ async findNextAvailableAppointment(
       });
 
     if (
-      streamSlots.length > 0 &&
-      booked < streamSlots.length
-    ) {
-      return {
-        message:
-          'Next available appointment found',
-        appointmentDate:
-          formattedDate,
-        schedulingType:
-          'STREAM',
-        availableSlots:
-          streamSlots.length - booked,
-      };
-    }
-
+  streamSlots.length > 0 &&
+  todayBooked < streamSlots.length
+) {
+  return {
+    message: 'Slots available today',
+    appointmentDate: todayDate,
+    schedulingType: 'STREAM',
+    availableSlots: streamSlots.length - todayBooked,
+  };
+}
     if (
       wave &&
       wave.bookedCount <
@@ -459,8 +491,8 @@ async findNextAvailableAppointment(
   }
 
   return {
-    message:
-      'No appointments available in the next 30 working days. Please try again later.',
-  };
+  message:
+    'No appointments available in the next 30 working days. Please try again later.',
+}
 };
 }

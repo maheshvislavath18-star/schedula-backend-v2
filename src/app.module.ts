@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
@@ -9,12 +10,15 @@ import { PatientModule } from './patient/patient.module';
 import { AvailabilityModule } from './availability/availability.module';
 import { AppointmentModule } from './appointment/appointment.module';
 import { NotificationModule } from './notifications/notification.module';
+import { ReminderModule } from './reminder/reminder.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+
+    ScheduleModule.forRoot(),
 
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -36,6 +40,7 @@ import { NotificationModule } from './notifications/notification.module';
     AvailabilityModule,
     AppointmentModule,
     NotificationModule,
+    ReminderModule,
   ],
 })
 export class AppModule {}

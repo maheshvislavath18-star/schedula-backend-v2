@@ -82,9 +82,21 @@ export class Appointment {
   // 🧠 OPTIONAL (GOOD FOR DEBUGGING / UI)
   // =====================================================
 
-  @Column({
-    nullable: true,
-  })
-  scheduleWindow: string; // e.g. "10:00-11:00" (Wave display)
+  // =====================================================
+// 🧠 OPTIONAL (GOOD FOR DEBUGGING / UI)
+// =====================================================
 
+@Column({
+  nullable: true,
+})
+scheduleWindow: string;
+
+// =====================================================
+// 🔔 DAY 17 - APPOINTMENT REMINDER
+// =====================================================
+
+@Column({
+  default: false,
+})
+reminderSent: boolean;
 }

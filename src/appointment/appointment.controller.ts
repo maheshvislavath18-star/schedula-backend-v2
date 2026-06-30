@@ -65,33 +65,22 @@ export class AppointmentController {
     );
   }
 
-  @Post('wave/:doctorId')
-  createWave(
-    @Param('doctorId') doctorId: string,
-    @Body() body: any,
-  ) {
-    return this.appointmentService.createWaveSchedule(
-      Number(doctorId),
-      body,
-    );
-  }
-
   @Post('wave/book')
-  bookWave(@Body() body: any) {
-    const waveId = Number(body.waveId);
-    const patientId = Number(body.patientId);
+bookWave(@Body() body: any) {
+  const waveId = Number(body.waveId);
+  const patientId = Number(body.patientId);
 
-    if (isNaN(waveId) || isNaN(patientId)) {
-      return {
-        message: 'Invalid waveId or patientId',
-      };
-    }
-
-    return this.appointmentService.bookWave({
-      waveId,
-      patientId,
-    });
+  if (!waveId || !patientId || isNaN(waveId) || isNaN(patientId)) {
+    return {
+      message: 'waveId and patientId must be valid numbers',
+    };
   }
+
+  return this.appointmentService.bookWave({
+    waveId,
+    patientId,
+  });
+}
 
   @Get('stream/:doctorId')
   getStreamSlots(
