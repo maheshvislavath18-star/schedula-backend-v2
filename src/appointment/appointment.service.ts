@@ -46,6 +46,63 @@ async bookAppointment(dto: CreateAppointmentDto) {
     return { message: "Booking allowed only for today's date" };
   }
 
+  // 👇👇👇 PASTE THE DAY 19 CODE HERE 👇👇👇
+
+ // ===============================
+// DAY 19 - Appointment Booking Window
+// ===============================
+
+const consultationStart = new Date(`${dto.date}T09:00:00`);
+const consultationEnd = new Date(`${dto.date}T12:00:00`);
+
+if (
+  isNaN(consultationStart.getTime()) ||
+  isNaN(consultationEnd.getTime())
+) {
+  return {
+    message: 'Invalid consultation timings',
+  };
+}
+
+if (consultationStart >= consultationEnd) {
+  return {
+    message: 'Invalid consultation timings',
+  };
+}
+
+const bookingOpen = new Date(consultationStart);
+bookingOpen.setHours(bookingOpen.getHours() - 2);
+
+const bookingClose = new Date(consultationEnd);
+bookingClose.setHours(bookingClose.getHours() - 1);
+
+const now = new Date();
+
+if (now < bookingOpen) {
+  return {
+    message: 'Booking has not opened yet.',
+  };
+}
+
+if (now > bookingClose) {
+  return {
+    message: 'Booking window has closed.',
+  };
+}
+  // 👇 Existing slot check starts here
+ const existing = await this.appointmentRepository.findOne({
+  where: {
+    doctorId: dto.doctorId,
+    date: dto.date,
+    startTime: dto.startTime,
+    status: 'BOOKED',
+  },
+ });
+
+if (existing) return { message: 'Slot already booked' };
+
+
+  // continue with save appointment...
  await this.appointmentRepository.findOne({
     where: {
       doctorId: dto.doctorId,
@@ -72,7 +129,7 @@ async bookAppointment(dto: CreateAppointmentDto) {
     data: saved,
   };
 
-    const existing = await this.appointmentRepository.findOne({
+     await this.appointmentRepository.findOne({
       where: {
         doctorId: dto.doctorId,
         date: dto.date,
