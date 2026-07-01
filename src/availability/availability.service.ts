@@ -67,22 +67,23 @@ export class AvailabilityService {
       }
     }
 
-    const availability = this.recurringRepo.create({
-      doctorId: 1,
-      dayOfWeek: dto.dayOfWeek,
-      startTime: dto.startTime,
-      endTime: dto.endTime,
-    });
+   const availability = this.recurringRepo.create({
+  doctorId: 1,
+  dayOfWeek: dto.dayOfWeek,
+  startTime: dto.startTime,
+  endTime: dto.endTime,
+  allowFutureBooking: dto.allowFutureBooking,
+  maxFutureBookingDays: dto.maxFutureBookingDays,
+});
 
-    return this.recurringRepo.save(availability);
-  }
-
+return this.recurringRepo.save(availability);
+}
   async createOverride(dto: CreateOverrideDto) {
     if (dto.startTime >= dto.endTime) {
       throw new BadRequestException(
         'Start time must be before end time',
       );
-    }
+    }  
 
     const availability = this.customRepo.create({
       doctorId: 1,
