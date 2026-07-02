@@ -9,6 +9,7 @@ import { StreamSlot } from './entity/stream-slot.entity';
 import { Wave } from './entity/wave.entity';
 import { WaveBooking } from './entity/wave-booking.entity';
 import { RecurringAvailability } from '../availability/entities/recurring-availability.entity';
+import { Leave } from '../leave/entities/leave.entity';
 
 import { NotificationModule } from '../notifications/notification.module';
 
@@ -20,6 +21,7 @@ import { NotificationModule } from '../notifications/notification.module';
       Wave,
       WaveBooking,
       RecurringAvailability,
+      Leave,
     ]),
     NotificationModule,
   ],

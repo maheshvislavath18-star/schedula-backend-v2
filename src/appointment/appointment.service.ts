@@ -10,11 +10,14 @@ import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { NotificationService } from '../notifications/notification.service';
 import { NotificationType } from '../notifications/notification-type.enum';
 import { RecurringAvailability } from '../availability/entities/recurring-availability.entity';
+import { Leave } from '../leave/entities/leave.entity';
 @Injectable()
 export class AppointmentService {
   constructor(
   @InjectRepository(Appointment)
   private appointmentRepository: Repository<Appointment>,
+  @InjectRepository(Leave)
+private readonly leaveRepository: Repository<Leave>,
 
   @InjectRepository(StreamSlot)
   private streamRepository: Repository<StreamSlot>,
