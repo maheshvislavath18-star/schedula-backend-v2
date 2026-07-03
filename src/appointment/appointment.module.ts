@@ -12,6 +12,7 @@ import { RecurringAvailability } from '../availability/entities/recurring-availa
 import { Leave } from '../leave/entities/leave.entity';
 
 import { NotificationModule } from '../notifications/notification.module';
+import { CustomAvailability } from '../availability/entities/custom-availability.entity';
 
 @Module({
   imports: [
@@ -21,11 +22,13 @@ import { NotificationModule } from '../notifications/notification.module';
       Wave,
       WaveBooking,
       RecurringAvailability,
+       CustomAvailability,
       Leave,
     ]),
     NotificationModule,
   ],
   controllers: [AppointmentController],
   providers: [AppointmentService],
+  exports: [AppointmentService],   // ✅ ADD THIS
 })
 export class AppointmentModule {}

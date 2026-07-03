@@ -11,6 +11,7 @@ import { NotificationService } from '../notifications/notification.service';
 import { NotificationType } from '../notifications/notification-type.enum';
 import { RecurringAvailability } from '../availability/entities/recurring-availability.entity';
 import { Leave } from '../leave/entities/leave.entity';
+import { CustomAvailability } from '../availability/entities/custom-availability.entity';
 @Injectable()
 export class AppointmentService {
   constructor(
@@ -18,6 +19,8 @@ export class AppointmentService {
   private appointmentRepository: Repository<Appointment>,
   @InjectRepository(Leave)
 private readonly leaveRepository: Repository<Leave>,
+@InjectRepository(CustomAvailability)
+private readonly customRepository: Repository<CustomAvailability>,
 
   @InjectRepository(StreamSlot)
   private streamRepository: Repository<StreamSlot>,
@@ -51,13 +54,25 @@ async bookAppointment(dto: CreateAppointmentDto) {
   weekday: 'long',
 });
 
-const availability = await this.recurringRepository.findOne({
+const customAvailability = await this.customRepository.findOne({
   where: {
     doctorId: dto.doctorId,
-    dayOfWeek,
+    date: dto.date,
   },
 });
 
+let availability;
+
+if (customAvailability) {
+  availability = customAvailability;
+} else {
+  availability = await this.recurringRepository.findOne({
+    where: {
+      doctorId: dto.doctorId,
+      dayOfWeek,
+    },
+  });
+}
 if (!availability) {
   return {
     message: 'Doctor availability not found',
@@ -184,11 +199,53 @@ return {
     data: updated,
   };
 }
+async cancelConflictingAppointments(
+    doctorId: number,
+    date: string,
+    startTime: string,
+    endTime: string,
+  ) {
+    const appointments = await this.appointmentRepository.find({
+      where: {
+        doctorId,
+        date,
+        status: 'BOOKED',
+      },
+    });
+
+    let cancelledCount = 0;
+
+    for (const appointment of appointments) {
+      const outsideAvailability =
+        appointment.startTime < startTime ||
+        appointment.endTime > endTime;
+
+      if (outsideAvailability) {
+        appointment.status = 'CANCELLED';
+
+        await this.appointmentRepository.save(appointment);
+
+        // Notification
+        await this.notificationService.create({
+  patientId: appointment.patientId,
+  title: 'Appointment Cancelled',
+  message:
+    'Your appointment has been cancelled because the doctor updated availability.',
+  type: 'APPOINTMENT_CANCELLED',
+});
+
+        cancelledCount++;
+      }
+    }
+
+    return cancelledCount;
+  }
+ // <-- Class ends here
   // =====================================================
   // 🚀 STREAM (REAL DB)
   // =====================================================
 
-  async createStreamSchedule(doctorId: number, body: any) {
+   async createStreamSchedule(doctorId: number, body: any) {
     const { startTime, endTime, slotDuration, bufferTime = 0 } = body;
 
     const slots = this.generateStreamSlots(
