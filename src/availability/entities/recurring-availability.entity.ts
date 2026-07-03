@@ -23,6 +23,18 @@ export class RecurringAvailability {
   @Column()
   endTime!: string;
 
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  allowFutureBooking!: boolean;
+
+  @Column({
+    type: 'int',
+    nullable: true,
+  })
+  maxFutureBookingDays!: number;
+
   @CreateDateColumn()
   createdAt!: Date;
 

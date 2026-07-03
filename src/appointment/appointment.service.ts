@@ -9,11 +9,18 @@ import { WaveBooking } from './entity/wave-booking.entity';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { NotificationService } from '../notifications/notification.service';
 import { NotificationType } from '../notifications/notification-type.enum';
+import { RecurringAvailability } from '../availability/entities/recurring-availability.entity';
+import { Leave } from '../leave/entities/leave.entity';
+import { CustomAvailability } from '../availability/entities/custom-availability.entity';
 @Injectable()
 export class AppointmentService {
   constructor(
   @InjectRepository(Appointment)
   private appointmentRepository: Repository<Appointment>,
+  @InjectRepository(Leave)
+private readonly leaveRepository: Repository<Leave>,
+@InjectRepository(CustomAvailability)
+private readonly customRepository: Repository<CustomAvailability>,
 
   @InjectRepository(StreamSlot)
   private streamRepository: Repository<StreamSlot>,
@@ -24,9 +31,11 @@ export class AppointmentService {
   @InjectRepository(WaveBooking)
   private waveBookingRepository: Repository<WaveBooking>,
 
+  @InjectRepository(RecurringAvailability)
+  private readonly recurringRepository: Repository<RecurringAvailability>,
+
   private readonly notificationService: NotificationService,
 ) {}
-
   // =====================================================
   // 🟢 DAY 8
   // =====================================================
@@ -41,6 +50,58 @@ async bookAppointment(dto: CreateAppointmentDto) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   appointmentDate.setHours(0, 0, 0, 0);
+  const dayOfWeek = appointmentDate.toLocaleDateString('en-US', {
+  weekday: 'long',
+});
+
+const customAvailability = await this.customRepository.findOne({
+  where: {
+    doctorId: dto.doctorId,
+    date: dto.date,
+  },
+});
+
+let availability;
+
+if (customAvailability) {
+  availability = customAvailability;
+} else {
+  availability = await this.recurringRepository.findOne({
+    where: {
+      doctorId: dto.doctorId,
+      dayOfWeek,
+    },
+  });
+}
+if (!availability) {
+  return {
+    message: 'Doctor availability not found',
+  };
+}
+
+if (!availability.allowFutureBooking) {
+
+  // Day 19 logic
+  if (appointmentDate.getTime() !== today.getTime()) {
+    return {
+      message: "Booking allowed only for today's date",
+    };
+  }
+
+} else {
+
+  const maxDays = availability.maxFutureBookingDays ?? 7;
+
+  const lastAllowed = new Date(today);
+  lastAllowed.setDate(today.getDate() + maxDays);
+
+  if (appointmentDate > lastAllowed) {
+    return {
+      message: `Booking allowed only within ${maxDays} future days`,
+    };
+  }
+
+}
 
   if (appointmentDate.getTime() !== today.getTime()) {
     return { message: "Booking allowed only for today's date" };
@@ -138,11 +199,53 @@ return {
     data: updated,
   };
 }
+async cancelConflictingAppointments(
+    doctorId: number,
+    date: string,
+    startTime: string,
+    endTime: string,
+  ) {
+    const appointments = await this.appointmentRepository.find({
+      where: {
+        doctorId,
+        date,
+        status: 'BOOKED',
+      },
+    });
+
+    let cancelledCount = 0;
+
+    for (const appointment of appointments) {
+      const outsideAvailability =
+        appointment.startTime < startTime ||
+        appointment.endTime > endTime;
+
+      if (outsideAvailability) {
+        appointment.status = 'CANCELLED';
+
+        await this.appointmentRepository.save(appointment);
+
+        // Notification
+        await this.notificationService.create({
+  patientId: appointment.patientId,
+  title: 'Appointment Cancelled',
+  message:
+    'Your appointment has been cancelled because the doctor updated availability.',
+  type: 'APPOINTMENT_CANCELLED',
+});
+
+        cancelledCount++;
+      }
+    }
+
+    return cancelledCount;
+  }
+ // <-- Class ends here
   // =====================================================
   // 🚀 STREAM (REAL DB)
   // =====================================================
 
-  async createStreamSchedule(doctorId: number, body: any) {
+   async createStreamSchedule(doctorId: number, body: any) {
     const { startTime, endTime, slotDuration, bufferTime = 0 } = body;
 
     const slots = this.generateStreamSlots(

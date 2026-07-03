@@ -8,8 +8,11 @@ import { Appointment } from './appointment.entity';
 import { StreamSlot } from './entity/stream-slot.entity';
 import { Wave } from './entity/wave.entity';
 import { WaveBooking } from './entity/wave-booking.entity';
+import { RecurringAvailability } from '../availability/entities/recurring-availability.entity';
+import { Leave } from '../leave/entities/leave.entity';
 
 import { NotificationModule } from '../notifications/notification.module';
+import { CustomAvailability } from '../availability/entities/custom-availability.entity';
 
 @Module({
   imports: [
@@ -18,10 +21,14 @@ import { NotificationModule } from '../notifications/notification.module';
       StreamSlot,
       Wave,
       WaveBooking,
+      RecurringAvailability,
+       CustomAvailability,
+      Leave,
     ]),
-    NotificationModule, // 👈 ADD THIS
+    NotificationModule,
   ],
   controllers: [AppointmentController],
   providers: [AppointmentService],
+  exports: [AppointmentService],   
 })
 export class AppointmentModule {}

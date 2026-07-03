@@ -11,6 +11,7 @@ import { AvailabilityModule } from './availability/availability.module';
 import { AppointmentModule } from './appointment/appointment.module';
 import { NotificationModule } from './notifications/notification.module';
 import { ReminderModule } from './reminder/reminder.module';
+import { LeaveModule } from './leave/leave.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { ReminderModule } from './reminder/reminder.module';
     AppointmentModule,
     NotificationModule,
     ReminderModule,
+    LeaveModule,
   ],
 })
 export class AppModule {}

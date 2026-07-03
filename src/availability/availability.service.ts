@@ -11,16 +11,19 @@ import { RecurringAvailability } from './entities/recurring-availability.entity'
 import { CustomAvailability } from './entities/custom-availability.entity';
 import { CreateAvailabilityDto } from './dto/create-availability.dto';
 import { CreateOverrideDto } from './dto/create-override.dto';
+import { AppointmentService } from '../appointment/appointment.service';
 
 @Injectable()
 export class AvailabilityService {
   constructor(
-    @InjectRepository(RecurringAvailability)
-    private readonly recurringRepo: Repository<RecurringAvailability>,
+  @InjectRepository(RecurringAvailability)
+  private readonly recurringRepo: Repository<RecurringAvailability>,
 
-    @InjectRepository(CustomAvailability)
-    private readonly customRepo: Repository<CustomAvailability>,
-  ) {}
+  @InjectRepository(CustomAvailability)
+  private readonly customRepo: Repository<CustomAvailability>,
+
+  private readonly appointmentService: AppointmentService,
+) {}
 
   async getAllRecurring() {
     return this.recurringRepo.find();
@@ -67,33 +70,58 @@ export class AvailabilityService {
       }
     }
 
-    const availability = this.recurringRepo.create({
-      doctorId: 1,
-      dayOfWeek: dto.dayOfWeek,
-      startTime: dto.startTime,
-      endTime: dto.endTime,
-    });
+   const availability = this.recurringRepo.create({
+  doctorId: 1,
+  dayOfWeek: dto.dayOfWeek,
+  startTime: dto.startTime,
+  endTime: dto.endTime,
+  allowFutureBooking: dto.allowFutureBooking,
+  maxFutureBookingDays: dto.maxFutureBookingDays,
+});
 
-    return this.recurringRepo.save(availability);
+return this.recurringRepo.save(availability);
+}
+ async createOverride(dto: CreateOverrideDto) {
+  if (dto.startTime >= dto.endTime) {
+    throw new BadRequestException(
+      'Start time must be before end time',
+    );
   }
 
-  async createOverride(dto: CreateOverrideDto) {
-    if (dto.startTime >= dto.endTime) {
-      throw new BadRequestException(
-        'Start time must be before end time',
-      );
-    }
-
-    const availability = this.customRepo.create({
+  const existingOverride = await this.customRepo.findOne({
+    where: {
       doctorId: 1,
       date: dto.date,
-      startTime: dto.startTime,
-      endTime: dto.endTime,
-    });
+    },
+  });
 
-    return this.customRepo.save(availability);
+  if (existingOverride) {
+    throw new ConflictException(
+      'Override already exists for this date',
+    );
   }
 
+  const availability = this.customRepo.create({
+    doctorId: 1,
+    date: dto.date,
+    startTime: dto.startTime,
+    endTime: dto.endTime,
+  });
+
+  const savedAvailability = await this.customRepo.save(availability);
+
+  await this.appointmentService.cancelConflictingAppointments(
+    1,
+    dto.date,
+    dto.startTime,
+    dto.endTime,
+  );
+
+  return {
+    message: 'Override created successfully',
+    availability: savedAvailability,
+  };
+}
 async getAvailabilityByDate(date: string) {
   const custom = await this.customRepo.find({
     where: { date },
