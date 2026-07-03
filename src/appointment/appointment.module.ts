@@ -29,6 +29,6 @@ import { CustomAvailability } from '../availability/entities/custom-availability
   ],
   controllers: [AppointmentController],
   providers: [AppointmentService],
-  exports: [AppointmentService],   // ✅ ADD THIS
+  exports: [AppointmentService],   
 })
 export class AppointmentModule {}
